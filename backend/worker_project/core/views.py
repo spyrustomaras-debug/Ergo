@@ -9,6 +9,11 @@ from rest_framework import viewsets, permissions
 from .serializers import ProjectSerializer
 from .models import Project
 from rest_framework.decorators import api_view, action
+from rest_framework import status
+from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
+from rest_framework import serializers
+
+
 
 
 class IsWorker(permissions.BasePermission):
@@ -35,18 +40,35 @@ class AdminRegisterView(generics.CreateAPIView):
 # Custom JWT login with role in response
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
-        data = super().validate(attrs)
+        try:
+            data = super().validate(attrs)
+        except Exception:
+            # Raise as plain string to get {"detail": "..."}
+            raise serializers.ValidationError("Wrong username or password")
+        
+        # Add user info to response
         data["user"] = UserSerializer(self.user).data
         return data
 
 class CustomLoginView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        try:
+            serializer.is_valid(raise_exception=True)
+        except TokenError:
+            # Invalid token internally
+            return Response({"detail": "Wrong username or password"}, status=status.HTTP_401_UNAUTHORIZED)
+        except Exception:
+            # Any other failure
+            return Response({"detail": "Wrong username or password"}, status=status.HTTP_401_UNAUTHORIZED)
+
+        return Response(serializer.validated_data, status=status.HTTP_200_OK)
     
 class ProjectViewSet(viewsets.ModelViewSet):
     serializer_class = ProjectSerializer
     permission_classes = [permissions.IsAuthenticated]  # Default permission
-    
-    
 
     def get_permissions(self):
         """
