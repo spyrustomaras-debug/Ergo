@@ -1,0 +1,19 @@
+# Virtual environment
+venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Django stuff
+*.sqlite3
+*.log
+/static/
+
+# Ignore all migration files except __init__.py
+**/migrations/*.py[cod]
+**/migrations/__pycache__/
+
+# Optionally ignore all migrations (careful if you need them for version control)
+# **/migrations/
