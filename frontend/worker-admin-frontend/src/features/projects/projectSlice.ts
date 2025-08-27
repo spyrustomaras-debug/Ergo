@@ -7,6 +7,8 @@ interface Project {
   name: string;
   description: string;
   created_at: string;
+  start_date?: string;   // new
+  finish_date?: string;  // new
 }
 
 interface ProjectState {
@@ -40,18 +42,21 @@ export const fetchProjects = createAsyncThunk<
 // Create a new project
 export const createProject = createAsyncThunk<
   Project,
-  { name: string; description: string },
+  { name: string; description: string; start_date?: string; finish_date?: string },
   { state: RootState; rejectValue: any }
->("projects/createProject", async (data, { getState, rejectWithValue }) => {
-  try {
-    const token = getState().auth.accessToken;
-    setAuthToken(token || null); // Attach token to Axios
-    const response = await axiosInstance.post("/projects/", data);
-    return response.data;
-  } catch (err: any) {
-    return rejectWithValue(err.response?.data || "Failed to create project");
+>(
+  "projects/createProject",
+  async (data, { getState, rejectWithValue }) => {
+    try {
+      const token = getState().auth.accessToken;
+      setAuthToken(token || null); 
+      const response = await axiosInstance.post("/projects/", data);
+      return response.data;
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data || "Failed to create project");
+    }
   }
-});
+);
 
 const projectSlice = createSlice({
   name: "projects",

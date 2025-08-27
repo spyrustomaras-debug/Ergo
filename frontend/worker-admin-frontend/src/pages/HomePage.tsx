@@ -68,10 +68,7 @@ const HomePage: React.FC = () => {
             {typeof error === "string" ? error : JSON.stringify(error)}
           </p>
         )}
-
-        {/* WebSocket status */}
-        <p>WebSocket status: {wsConnected ? "Connected" : "Disconnected"}</p>
-
+        
         {/* Render dashboard based on role */}
         {role === "ADMIN" ? <AdminDashboard /> : <ProjectDashboard />}
       </main>

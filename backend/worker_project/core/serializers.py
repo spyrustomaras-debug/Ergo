@@ -5,12 +5,9 @@ from .models import Project
 
 
 class ProjectSerializer(serializers.ModelSerializer):
-    worker = serializers.ReadOnlyField(source='worker.username')  # show username instead of ID
-
     class Meta:
         model = Project
-        fields = ['id', 'worker', 'name', 'description', 'created_at']
-        read_only_fields = ['id', 'worker', 'created_at']
+        fields = ['id', 'worker', 'name', 'description', 'created_at', 'start_date', 'finish_date']
 
 # Worker registration
 class WorkerRegisterSerializer(serializers.ModelSerializer):

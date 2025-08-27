@@ -7,16 +7,28 @@ const ProjectDashboard: React.FC = () => {
   const { projects, loading, error } = useAppSelector((state) => state.projects);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [finishDate, setFinishDate] = useState("");
 
   useEffect(() => {
     dispatch(fetchProjects());
   }, [dispatch]);
 
+    // Define the reusable input style
+  const inputStyle: React.CSSProperties = {
+    padding: "0.75rem",
+    borderRadius: "6px",
+    border: "1px solid #ccc",
+    fontSize: "1rem",
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    dispatch(createProject({ name, description }));
+    dispatch(createProject({ name, description, start_date: startDate, finish_date: finishDate }));
     setName("");
     setDescription("");
+    setStartDate("");
+    setFinishDate("");
   };
 
   return (
@@ -61,6 +73,20 @@ const ProjectDashboard: React.FC = () => {
             minHeight: "80px",
           }}
         />
+        <input
+          type="date"
+          placeholder="Start Date"
+          value={startDate}
+          onChange={(e) => setStartDate(e.target.value)}
+          style={inputStyle}
+        />
+        <input
+          type="date"
+          placeholder="Finish Date"
+          value={finishDate}
+          onChange={(e) => setFinishDate(e.target.value)}
+          style={inputStyle}
+        />
         <button
           type="submit"
           disabled={loading}
@@ -91,25 +117,34 @@ const ProjectDashboard: React.FC = () => {
         }}
       >
         {projects.map((p) => (
-          <div
-            key={p.id}
-            style={{
-              backgroundColor: "#fff",
-              padding: "1rem",
-              borderRadius: "8px",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-              display: "flex",
-              flexDirection: "column",
-              gap: "0.5rem",
-            }}
-          >
-            <h3 style={{ margin: 0, color: "#222" }}>{p.name}</h3>
-            <p style={{ margin: 0, color: "#555" }}>{p.description || "No description provided."}</p>
-            <span style={{ fontSize: "0.85rem", color: "#999" }}>
-              Created at: {new Date(p.created_at).toLocaleString()}
-            </span>
-          </div>
-        ))}
+        <div
+          key={p.id}
+          style={{
+            backgroundColor: "#fff",
+            padding: "1rem",
+            borderRadius: "8px",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+            display: "flex",
+            flexDirection: "column",
+            gap: "0.5rem",
+          }}
+        >
+          <h3 style={{ margin: 0, color: "#222" }}>{p.name}</h3>
+          <p style={{ margin: 0, color: "#555" }}>
+            {p.description || "No description provided."}
+          </p>
+          <span style={{ fontSize: "0.85rem", color: "#999" }}>
+            Created at: {new Date(p.created_at).toLocaleString()}
+          </span>
+          <span style={{ fontSize: "0.85rem", color: "#999" }}>
+            Start Date: {p.start_date ? new Date(p.start_date).toLocaleDateString() : "N/A"}
+          </span>
+          <span style={{ fontSize: "0.85rem", color: "#999" }}>
+            Finish Date: {p.finish_date ? new Date(p.finish_date).toLocaleDateString() : "N/A"}
+          </span>
+        </div>
+      ))}
+
       </div>
     </div>
   );
