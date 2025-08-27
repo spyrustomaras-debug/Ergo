@@ -82,7 +82,7 @@ const Register: React.FC = () => {
           </button>
         </form>
 
-        {error && <p style={{ color: "red", marginTop: "1rem", textAlign: "center" }}>{error}</p>}
+
 
         {/* Link to login page */}
         <p style={{ textAlign: "center", marginTop: "1rem" }}>

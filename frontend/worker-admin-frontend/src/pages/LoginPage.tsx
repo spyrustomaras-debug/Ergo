@@ -2,11 +2,12 @@ import React, { useState, useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "../features/auth/hooks";
 import { login } from "../features/auth/authSlice";
 import { Link, useNavigate } from "react-router-dom";
+import { setAuthToken } from "../api/axios";
 
 const LoginPage: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate(); // <-- useNavigate hook
-  const { loading, error, user, loggedIn  } = useAppSelector(state => state.auth);
+  const { loading, error, user, loggedIn, accessToken  } = useAppSelector(state => state.auth);
 
   const [form, setForm] = useState({ username: "", password: "" });
 
@@ -19,12 +20,13 @@ const LoginPage: React.FC = () => {
     dispatch(login(form));
   };
 
-  // Redirect to HomePage after successful login
+    // Attach token to Axios and navigate after login
   useEffect(() => {
-     if (loggedIn) {
-        navigate("/home");
-    } 
-  }, [user, navigate]);
+    if (user && accessToken) {
+      setAuthToken(accessToken); // attach token
+      navigate("/home");
+    }
+  }, [user, accessToken, navigate]);
 
   return (
     <div
@@ -78,7 +80,6 @@ const LoginPage: React.FC = () => {
           </button>
         </form>
 
-        {error && <p style={{ color: "red", marginTop: "1rem", textAlign: "center" }}>{error}</p>}
 
         {/* Link to register page */}
         <p style={{ textAlign: "center", marginTop: "1rem" }}>

@@ -14,8 +14,10 @@ interface AuthState {
   refreshToken: string | null;
   loading: boolean;
   error: string | null;
-  loggedIn: boolean; // <-- new flag
+  loggedIn: boolean;
+  role: string | null; // <-- new field
 }
+
 
 const initialState: AuthState = {
   user: null,
@@ -24,7 +26,9 @@ const initialState: AuthState = {
   loading: false,
   error: null,
   loggedIn: false,
+  role: null,
 };
+
 
 // Worker registration
 export const registerWorker = createAsyncThunk(
@@ -57,9 +61,11 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     logout: (state) => {
-      state.user = null;
-      state.accessToken = null;
-      state.refreshToken = null;
+        state.user = null;
+        state.accessToken = null;
+        state.refreshToken = null;
+        state.loggedIn = false;
+        state.role = null; // <-- reset role
     },
   },
   extraReducers: (builder) => {
@@ -75,11 +81,12 @@ const authSlice = createSlice({
     // Login
     builder.addCase(login.pending, (state) => { state.loading = true; state.error = null; });
     builder.addCase(login.fulfilled, (state, action) => {
-      state.loading = false;
-      state.accessToken = action.payload.access;
-      state.refreshToken = action.payload.refresh;
-      state.user = action.payload.user;
-      state.loggedIn = true; // <-- set after login
+        state.loading = false;
+        state.accessToken = action.payload.access;
+        state.refreshToken = action.payload.refresh;
+        state.user = action.payload.user;
+        state.loggedIn = true;
+        state.role = action.payload.user.role; // <-- save role for later use
     });
     builder.addCase(login.rejected, (state, action) => { state.loading = false; state.error = action.payload as string; });
   },
