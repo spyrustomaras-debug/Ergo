@@ -9,11 +9,25 @@ __pycache__/
 # Django stuff
 *.sqlite3
 *.log
+*.pot
 /static/
+/media/
 
-# Ignore all migration files except __init__.py
+# Ignore migrations except __init__.py
 **/migrations/*.py[cod]
 **/migrations/__pycache__/
 
-# Optionally ignore all migrations (careful if you need them for version control)
+# Optional: ignore all migrations (uncomment if you prefer)
 # **/migrations/
+
+# IDE/editor files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
