@@ -14,6 +14,7 @@ interface AuthState {
   refreshToken: string | null;
   loading: boolean;
   error: string | null;
+  loggedIn: boolean; // <-- new flag
 }
 
 const initialState: AuthState = {
@@ -22,6 +23,7 @@ const initialState: AuthState = {
   refreshToken: null,
   loading: false,
   error: null,
+  loggedIn: false,
 };
 
 // Worker registration
@@ -63,7 +65,11 @@ const authSlice = createSlice({
   extraReducers: (builder) => {
     // Register Worker
     builder.addCase(registerWorker.pending, (state) => { state.loading = true; state.error = null; });
-    builder.addCase(registerWorker.fulfilled, (state, action) => { state.loading = false; state.user = action.payload; });
+    builder.addCase(registerWorker.fulfilled, (state, action) => 
+        { 
+            state.loading = false; 
+            state.user = action.payload; 
+        });
     builder.addCase(registerWorker.rejected, (state, action) => { state.loading = false; state.error = action.payload as string; });
 
     // Login
@@ -73,6 +79,7 @@ const authSlice = createSlice({
       state.accessToken = action.payload.access;
       state.refreshToken = action.payload.refresh;
       state.user = action.payload.user;
+      state.loggedIn = true; // <-- set after login
     });
     builder.addCase(login.rejected, (state, action) => { state.loading = false; state.error = action.payload as string; });
   },

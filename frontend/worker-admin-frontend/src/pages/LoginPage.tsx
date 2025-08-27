@@ -1,11 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "../features/auth/hooks";
 import { login } from "../features/auth/authSlice";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const LoginPage: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { loading, error, user } = useAppSelector(state => state.auth);
+  const navigate = useNavigate(); // <-- useNavigate hook
+  const { loading, error, user, loggedIn  } = useAppSelector(state => state.auth);
 
   const [form, setForm] = useState({ username: "", password: "" });
 
@@ -17,6 +18,13 @@ const LoginPage: React.FC = () => {
     e.preventDefault();
     dispatch(login(form));
   };
+
+  // Redirect to HomePage after successful login
+  useEffect(() => {
+     if (loggedIn) {
+        navigate("/home");
+    } 
+  }, [user, navigate]);
 
   return (
     <div
@@ -71,7 +79,6 @@ const LoginPage: React.FC = () => {
         </form>
 
         {error && <p style={{ color: "red", marginTop: "1rem", textAlign: "center" }}>{error}</p>}
-        {user && <p style={{ color: "green", marginTop: "1rem", textAlign: "center" }}>Logged in as: {user.username}</p>}
 
         {/* Link to register page */}
         <p style={{ textAlign: "center", marginTop: "1rem" }}>

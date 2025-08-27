@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "../features/auth/hooks";
 import { registerWorker } from "../features/auth/authSlice";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const Register: React.FC = () => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate(); // <-- useNavigate hook
   const { loading, error, user } = useAppSelector(state => state.auth);
 
   const [form, setForm] = useState({ username: "", email: "", password: "" });
@@ -17,6 +18,13 @@ const Register: React.FC = () => {
     e.preventDefault();
     dispatch(registerWorker(form));
   };
+
+  // Redirect after successful registration
+  useEffect(() => {
+    if (user) {
+      navigate("/login");
+    }
+  }, [user, navigate]);
 
   return (
     <div
@@ -75,7 +83,6 @@ const Register: React.FC = () => {
         </form>
 
         {error && <p style={{ color: "red", marginTop: "1rem", textAlign: "center" }}>{error}</p>}
-        {user && <p style={{ color: "green", marginTop: "1rem", textAlign: "center" }}>Registered successfully: {user.username}</p>}
 
         {/* Link to login page */}
         <p style={{ textAlign: "center", marginTop: "1rem" }}>
