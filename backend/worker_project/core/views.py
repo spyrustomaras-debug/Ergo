@@ -7,6 +7,16 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import viewsets, permissions
 from .serializers import ProjectSerializer
+from .models import Project
+from rest_framework.decorators import api_view, action
+
+
+class IsWorker(permissions.BasePermission):
+    """
+    Custom permission: only workers can create projects.
+    """
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and request.user.role == "WORKER"
 
 # Worker Register
 class WorkerRegisterView(generics.CreateAPIView):
@@ -34,16 +44,50 @@ class CustomLoginView(TokenObtainPairView):
     
 class ProjectViewSet(viewsets.ModelViewSet):
     serializer_class = ProjectSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]  # Default permission
+    
+    
+
+    def get_permissions(self):
+        """
+        Customize permissions based on action
+        """
+        if self.action == "create":
+            # Only workers can create projects
+            return [IsWorker()]
+        return [permissions.IsAuthenticated()]
 
     def get_queryset(self):
         user = self.request.user
         if user.role == "ADMIN":
-            return Project.objects.all()  # Admin sees all projects
-        return Project.objects.filter(worker=user)  # Worker sees only their own
+            # Admin sees all projects
+            return Project.objects.all()
+        # Worker sees only their own projects
+        return Project.objects.filter(worker=user)
 
     def perform_create(self, serializer):
+        # Automatically assign the logged-in user as the worker
         serializer.save(worker=self.request.user)
+        
+        # Custom endpoint for grouped projects (only for admin)
+    @action(detail=False, methods=["GET"], permission_classes=[permissions.IsAuthenticated])
+    def grouped_projects(self, request):
+            user = request.user
+            if user.role != "ADMIN":
+                return Response({"detail": "You are not authorized"}, status=403)
+
+            workers = User.objects.filter(role="WORKER")
+            data = []
+            for w in workers:
+                projects = Project.objects.filter(worker=w)
+                data.append({
+                    "worker": UserSerializer(w).data,
+                    "projects": ProjectSerializer(projects, many=True).data
+                })
+            return Response(data)
+        
+
+
     
 
 
