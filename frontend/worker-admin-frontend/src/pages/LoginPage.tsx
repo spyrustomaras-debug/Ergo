@@ -6,13 +6,18 @@ import { setAuthToken } from "../api/axios";
 
 const LoginPage: React.FC = () => {
   const dispatch = useAppDispatch();
-  const navigate = useNavigate(); // <-- useNavigate hook
-  const { loading, error, user, loggedIn, accessToken  } = useAppSelector(state => state.auth);
+  const navigate = useNavigate();
+  const { loading, error, user, loggedIn, accessToken } = useAppSelector(
+    (state) => state.auth
+  );
 
   const [form, setForm] = useState({ username: "", password: "" });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+    if (error) {
+      dispatch({ type: "auth/clearError" }); // dispatch a reducer to reset error
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -20,10 +25,10 @@ const LoginPage: React.FC = () => {
     dispatch(login(form));
   };
 
-    // Attach token to Axios and navigate after login
+  // Attach token to Axios and navigate after login
   useEffect(() => {
     if (user && accessToken) {
-      setAuthToken(accessToken); // attach token
+      setAuthToken(accessToken);
       navigate("/home");
     }
   }, [user, accessToken, navigate]);
@@ -48,7 +53,10 @@ const LoginPage: React.FC = () => {
         }}
       >
         <h2 style={{ textAlign: "center", marginBottom: "1rem" }}>Login</h2>
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "0.8rem" }}>
+        <form
+          onSubmit={handleSubmit}
+          style={{ display: "flex", flexDirection: "column", gap: "0.8rem" }}
+        >
           <input
             name="username"
             placeholder="Username"
@@ -80,10 +88,23 @@ const LoginPage: React.FC = () => {
           </button>
         </form>
 
+        {!loading && !loggedIn && error && (
+          <p style={{ color: "red", marginTop: "1rem", textAlign: "center" }}>
+            {typeof error === "string"
+              ? error
+              : "detail" in error
+              ? error.detail
+              : "Login failed"}
+          </p>
+        )}
+
 
         {/* Link to register page */}
         <p style={{ textAlign: "center", marginTop: "1rem" }}>
-          Don't have an account? <Link to="/" style={{ color: "#4CAF50", textDecoration: "none" }}>Register</Link>
+          Don't have an account?{" "}
+          <Link to="/" style={{ color: "#4CAF50", textDecoration: "none" }}>
+            Register
+          </Link>
         </p>
       </div>
     </div>

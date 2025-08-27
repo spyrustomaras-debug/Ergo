@@ -8,16 +8,19 @@ interface User {
   role: string;
 }
 
+interface AuthError {
+  detail?: string;
+}
+
 interface AuthState {
   user: User | null;
   accessToken: string | null;
   refreshToken: string | null;
   loading: boolean;
-  error: string | null;
+  error: string | AuthError | null;  // <-- can be string or object from backend
   loggedIn: boolean;
-  role: string | null; // <-- new field
+  role: string | null;
 }
-
 
 const initialState: AuthState = {
   user: null,
@@ -28,7 +31,6 @@ const initialState: AuthState = {
   loggedIn: false,
   role: null,
 };
-
 
 // Worker registration
 export const registerWorker = createAsyncThunk(
@@ -51,7 +53,9 @@ export const login = createAsyncThunk(
       const response = await axiosInstance.post("/login/", data);
       return response.data; // contains access, refresh, user
     } catch (err: any) {
-      return rejectWithValue(err.response.data);
+      // Extract DRF detail message if available
+      const message = err.response?.data?.detail || "Login failed";
+      return rejectWithValue(message);
     }
   }
 );
@@ -61,34 +65,49 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     logout: (state) => {
-        state.user = null;
-        state.accessToken = null;
-        state.refreshToken = null;
-        state.loggedIn = false;
-        state.role = null; // <-- reset role
+      state.user = null;
+      state.accessToken = null;
+      state.refreshToken = null;
+      state.loggedIn = false;
+      state.role = null;
+      state.error = null;
+    },
+    clearError: (state) => {
+      state.error = null;
     },
   },
   extraReducers: (builder) => {
     // Register Worker
-    builder.addCase(registerWorker.pending, (state) => { state.loading = true; state.error = null; });
-    builder.addCase(registerWorker.fulfilled, (state, action) => 
-        { 
-            state.loading = false; 
-            state.user = action.payload; 
-        });
-    builder.addCase(registerWorker.rejected, (state, action) => { state.loading = false; state.error = action.payload as string; });
+    builder.addCase(registerWorker.pending, (state) => {
+      state.loading = true;
+      state.error = null;
+    });
+    builder.addCase(registerWorker.fulfilled, (state, action) => {
+      state.loading = false;
+      state.user = action.payload;
+    });
+    builder.addCase(registerWorker.rejected, (state, action) => {
+      state.loading = false;
+      state.error = action.payload as string;
+    });
 
     // Login
-    builder.addCase(login.pending, (state) => { state.loading = true; state.error = null; });
-    builder.addCase(login.fulfilled, (state, action) => {
-        state.loading = false;
-        state.accessToken = action.payload.access;
-        state.refreshToken = action.payload.refresh;
-        state.user = action.payload.user;
-        state.loggedIn = true;
-        state.role = action.payload.user.role; // <-- save role for later use
+    builder.addCase(login.pending, (state) => {
+      state.loading = true;
+      state.error = null;
     });
-    builder.addCase(login.rejected, (state, action) => { state.loading = false; state.error = action.payload as string; });
+    builder.addCase(login.fulfilled, (state, action) => {
+      state.loading = false;
+      state.accessToken = action.payload.access;
+      state.refreshToken = action.payload.refresh;
+      state.user = action.payload.user;
+      state.loggedIn = true;
+      state.role = action.payload.user.role;
+    });
+    builder.addCase(login.rejected, (state, action) => {
+      state.loading = false;
+      state.error = action.payload || { detail: "Something went wrong" };
+    });
   },
 });
 
