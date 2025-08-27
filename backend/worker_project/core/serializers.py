@@ -8,6 +8,7 @@ class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
         fields = ['id', 'worker', 'name', 'description', 'created_at', 'start_date', 'finish_date']
+        read_only_fields = ['worker', 'created_at']  # worker is assigned automatically
 
 # Worker registration
 class WorkerRegisterSerializer(serializers.ModelSerializer):
