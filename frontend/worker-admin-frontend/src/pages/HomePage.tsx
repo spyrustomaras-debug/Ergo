@@ -4,6 +4,8 @@ import { logout } from "../features/auth/authSlice";
 import { useNavigate } from "react-router-dom";
 import ProjectDashboard from "../components/ProjectDashboard";
 import AdminDashboard from "../components/AdminDashboard";
+import { useIdleTimer } from "../hooks/useIdleTimer";
+
 
 const HomePage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -16,7 +18,11 @@ const HomePage: React.FC = () => {
     navigate("/"); // Redirect to login/register
   };
 
-
+  // Auto-logout after 1 minute (60000 ms) of inactivity
+  useIdleTimer({
+    timeout: 60 * 1000, // 1 minute
+    onIdle: handleLogout,
+  });
 
   return (
     <div style={{ minHeight: "100vh", backgroundColor: "#f0f2f5" }}>
