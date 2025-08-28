@@ -4,14 +4,26 @@ import { useEffect, useRef } from "react";
 interface UseIdleTimerProps {
   timeout: number; // in milliseconds
   onIdle: () => void; // callback when user is idle
+  warningTime?: number; // optional: time before idle to show warning
+  onWarning?: () => void; // optional: callback when warning triggers
 }
 
-export const useIdleTimer = ({ timeout, onIdle }: UseIdleTimerProps) => {
-  const timer = useRef<NodeJS.Timeout | null>(null);
+export const useIdleTimer = ({ timeout, onIdle, warningTime, onWarning }: UseIdleTimerProps) => {
+  const idleTimer = useRef<NodeJS.Timeout | null>(null);
+  const warningTimer = useRef<NodeJS.Timeout | null>(null);
 
   const resetTimer = () => {
-    if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(onIdle, timeout);
+    // Clear previous timers
+    if (idleTimer.current) clearTimeout(idleTimer.current);
+    if (warningTimer.current) clearTimeout(warningTimer.current);
+
+    // Setup warning timer
+    if (warningTime && onWarning) {
+      warningTimer.current = setTimeout(onWarning, timeout - warningTime);
+    }
+
+    // Setup idle timer
+    idleTimer.current = setTimeout(onIdle, timeout);
   };
 
   useEffect(() => {
@@ -19,11 +31,13 @@ export const useIdleTimer = ({ timeout, onIdle }: UseIdleTimerProps) => {
 
     events.forEach((event) => window.addEventListener(event, resetTimer));
 
-    resetTimer(); // start timer
+    resetTimer(); // start timers on mount
 
     return () => {
-      if (timer.current) clearTimeout(timer.current);
+      // Cleanup timers and event listeners
+      if (idleTimer.current) clearTimeout(idleTimer.current);
+      if (warningTimer.current) clearTimeout(warningTimer.current);
       events.forEach((event) => window.removeEventListener(event, resetTimer));
     };
-  }, [timeout, onIdle]);
+  }, [timeout, warningTime, onIdle, onWarning]);
 };
