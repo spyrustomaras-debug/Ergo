@@ -108,6 +108,31 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 })
             return Response(data)
         
+    # 🔍 Worker can search by project name
+    @action(detail=False, methods=["GET"], permission_classes=[permissions.IsAuthenticated])
+    def search(self, request):
+        name = request.query_params.get("name", "").strip()
+        if not name:
+            return Response(
+                {"detail": "Please provide a project name (?name=...)"},
+                status=400
+            )
+
+        # Worker sees only their own projects by exact name
+        projects = Project.objects.filter(
+            worker=request.user,
+            name__iexact=name   # exact match (ignores case)
+        )
+
+        if not projects.exists():
+            return Response(
+                {"detail": f"No project found with name '{name}'"},
+                status=404
+            )
+
+        serializer = ProjectSerializer(projects, many=True)
+        return Response(serializer.data)
+        
 
 
     
