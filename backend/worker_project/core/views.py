@@ -71,71 +71,63 @@ class ProjectViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]  # Default permission
 
     def get_permissions(self):
-        """
-        Customize permissions based on action
-        """
         if self.action == "create":
-            # Only workers can create projects
             return [IsWorker()]
         return [permissions.IsAuthenticated()]
 
     def get_queryset(self):
         user = self.request.user
         if user.role == "ADMIN":
-            # Admin sees all projects
             return Project.objects.all()
-        # Worker sees only their own projects
         return Project.objects.filter(worker=user)
 
     def perform_create(self, serializer):
-        # Automatically assign the logged-in user as the worker
         serializer.save(worker=self.request.user)
-        
-        # Custom endpoint for grouped projects (only for admin)
+
     @action(detail=False, methods=["GET"], permission_classes=[permissions.IsAuthenticated])
     def grouped_projects(self, request):
-            user = request.user
-            if user.role != "ADMIN":
-                return Response({"detail": "You are not authorized"}, status=403)
+        user = request.user
+        if user.role != "ADMIN":
+            return Response({"detail": "You are not authorized"}, status=403)
 
-            workers = User.objects.filter(role="WORKER")
-            data = []
-            for w in workers:
-                projects = Project.objects.filter(worker=w)
-                data.append({
-                    "worker": UserSerializer(w).data,
-                    "projects": ProjectSerializer(projects, many=True).data
-                })
-            return Response(data)
-        
-    # 🔍 Worker can search by project name
+        workers = User.objects.filter(role="WORKER")
+        data = []
+        for w in workers:
+            projects = Project.objects.filter(worker=w)
+            data.append({
+                "worker": UserSerializer(w).data,
+                "projects": ProjectSerializer(projects, many=True).data
+            })
+        return Response(data)
+
     @action(detail=False, methods=["GET"], permission_classes=[permissions.IsAuthenticated])
     def search(self, request):
         name = request.query_params.get("name", "").strip()
         if not name:
-            return Response(
-                {"detail": "Please provide a project name (?name=...)"},
-                status=400
-            )
+            return Response({"detail": "Please provide a project name (?name=...)"}, status=400)
 
-        # Worker sees only their own projects by exact name
-        projects = Project.objects.filter(
-            worker=request.user,
-            name__iexact=name   # exact match (ignores case)
-        )
-
+        projects = Project.objects.filter(worker=request.user, name__iexact=name)
         if not projects.exists():
-            return Response(
-                {"detail": f"No project found with name '{name}'"},
-                status=404
-            )
+            return Response({"detail": f"No project found with name '{name}'"}, status=404)
 
         serializer = ProjectSerializer(projects, many=True)
         return Response(serializer.data)
-        
 
+    @action(detail=True, methods=['patch'], permission_classes=[IsWorker])
+    def update_status(self, request, pk=None):
+        project = self.get_object()
+        if project.worker != request.user:
+            return Response({"detail": "Not authorized"}, status=403)
 
-    
+        status_value = request.data.get("status")
+        if status_value not in ["PENDING", "IN_PROGRESS", "COMPLETED"]:
+            return Response({"detail": "Invalid status"}, status=400)
+
+        project.status = status_value
+        project.save()
+        serializer = self.get_serializer(project)
+        return Response(serializer.data)
+
 
 
 @api_view(["GET"])

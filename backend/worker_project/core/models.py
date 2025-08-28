@@ -14,14 +14,24 @@ class User(AbstractUser):
         return f"{self.username} ({self.role})"
 
 
-# Project model with start and finish dates
+from django.db import models
+from django.conf import settings
+
 class Project(models.Model):
-    worker = models.ForeignKey(User, on_delete=models.CASCADE, related_name="projects")
+    STATUS_CHOICES = (
+        ("PENDING", "Pending"),
+        ("IN_PROGRESS", "In Progress"),
+        ("COMPLETED", "Completed"),
+    )
+
+    worker = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="projects")
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     start_date = models.DateField(null=True, blank=True)   # Optional start date
     finish_date = models.DateField(null=True, blank=True)  # Optional finish date
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="PENDING")  # Project status
 
     def __str__(self):
         return f"{self.name} ({self.worker.username})"
+
