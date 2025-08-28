@@ -1,14 +1,17 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axiosInstance, { setAuthToken } from "../../api/axios";
-import { RootState } from "../auth/index"; // Make sure your store is correctly typed
+import { RootState } from "../auth/index";
 
-interface Project {
+export type ProjectStatus = "PENDING" | "IN_PROGRESS" | "COMPLETED";
+
+export interface Project {
   id: number;
   name: string;
   description: string;
   created_at: string;
-  start_date?: string;   // new
-  finish_date?: string;  // new
+  start_date?: string;
+  finish_date?: string;
+  status: ProjectStatus; // <-- add status
 }
 
 interface ProjectState {
@@ -23,7 +26,7 @@ const initialState: ProjectState = {
   error: null,
 };
 
-// Fetch all projects for the logged-in worker
+// Fetch all projects
 export const fetchProjects = createAsyncThunk<
   Project[],
   void,
@@ -31,7 +34,7 @@ export const fetchProjects = createAsyncThunk<
 >("projects/fetchProjects", async (_, { getState, rejectWithValue }) => {
   try {
     const token = getState().auth.accessToken;
-    setAuthToken(token || null); // Attach token to Axios
+    setAuthToken(token || null);
     const response = await axiosInstance.get("/projects/");
     return response.data;
   } catch (err: any) {
@@ -39,24 +42,45 @@ export const fetchProjects = createAsyncThunk<
   }
 });
 
-// Create a new project
+// Create a project
 export const createProject = createAsyncThunk<
   Project,
   { name: string; description: string; start_date?: string; finish_date?: string },
   { state: RootState; rejectValue: any }
+>("projects/createProject", async (data, { getState, rejectWithValue }) => {
+  try {
+    const token = getState().auth.accessToken;
+    setAuthToken(token || null);
+    const response = await axiosInstance.post("/projects/", data);
+    return response.data;
+  } catch (err: any) {
+    return rejectWithValue(err.response?.data || "Failed to create project");
+  }
+});
+
+// Update project status
+// projectSlice.ts
+
+export const updateProjectStatus = createAsyncThunk<
+  Project,
+  { id: number; status: "IN_PROGRESS" | "COMPLETED" },
+  { state: RootState; rejectValue: any }
 >(
-  "projects/createProject",
-  async (data, { getState, rejectWithValue }) => {
+  "projects/updateStatus",
+  async ({ id, status }, { getState, rejectWithValue }) => {
     try {
       const token = getState().auth.accessToken;
-      setAuthToken(token || null); 
-      const response = await axiosInstance.post("/projects/", data);
+      setAuthToken(token || null); // attaches Authorization: Bearer <token>
+      const response = await axiosInstance.patch(`/projects/${id}/update_status/`, {
+        status, // ✅ payload matches your curl
+      });
       return response.data;
     } catch (err: any) {
-      return rejectWithValue(err.response?.data || "Failed to create project");
+      return rejectWithValue(err.response?.data || "Failed to update project status");
     }
   }
 );
+
 
 const projectSlice = createSlice({
   name: "projects",
@@ -64,32 +88,48 @@ const projectSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
-      // Fetch Projects
+      // fetch projects
       .addCase(fetchProjects.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchProjects.fulfilled, (state, action) => {
+      .addCase(fetchProjects.fulfilled, (state, action: PayloadAction<Project[]>) => {
         state.loading = false;
         state.projects = action.payload;
       })
       .addCase(fetchProjects.rejected, (state, action) => {
         state.loading = false;
-        // Handle object errors from DRF
-        state.error = typeof action.payload === "string" ? action.payload : action.payload?.detail || "Error fetching projects";
+        state.error =
+          typeof action.payload === "string" ? action.payload : action.payload?.detail || "Error fetching projects";
       })
-      // Create Project
+      // create project
       .addCase(createProject.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(createProject.fulfilled, (state, action) => {
+      .addCase(createProject.fulfilled, (state, action: PayloadAction<Project>) => {
         state.loading = false;
         state.projects.push(action.payload);
       })
       .addCase(createProject.rejected, (state, action) => {
         state.loading = false;
-        state.error = typeof action.payload === "string" ? action.payload : action.payload?.detail || "Error creating project";
+        state.error =
+          typeof action.payload === "string" ? action.payload : action.payload?.detail || "Error creating project";
+      })
+      // update status
+      .addCase(updateProjectStatus.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateProjectStatus.fulfilled, (state, action) => {
+        state.projects = state.projects.map((proj) =>
+          proj.id === action.payload.id ? action.payload : proj
+        );
+      })
+      .addCase(updateProjectStatus.rejected, (state, action) => {
+        state.loading = false;
+        state.error =
+          typeof action.payload === "string" ? action.payload : action.payload?.detail || "Error updating status";
       });
   },
 });

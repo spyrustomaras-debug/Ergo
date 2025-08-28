@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../features/auth/hooks";
-import { fetchProjects, createProject } from "../features/projects/projectSlice";
+import { fetchProjects, createProject, updateProjectStatus } from "../features/projects/projectSlice";
 import { searchProjects, clearSearch } from "../features/projects/projectSearchSlice";
 
 const ProjectDashboard: React.FC = () => {
@@ -113,19 +113,86 @@ const ProjectDashboard: React.FC = () => {
       {searchError && <p style={{ color: "red" }}>{searchError}</p>}
 
       {/* Projects List */}
-      <h2 style={{ marginTop: "2.5rem", fontSize: "2rem", color: "#333" }}>My Projects</h2>
-      {error && <p style={{ color: "red", marginTop: "0.5rem" }}>{error}</p>}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))", gap: "1rem", marginTop: "1rem" }}>
-        {displayedProjects.map((p) => (
-          <div key={p.id} style={{ backgroundColor: "#fff", padding: "1rem", borderRadius: "8px", boxShadow: "0 2px 8px rgba(0,0,0,0.1)", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-            <h3 style={{ margin: 0, color: "#222" }}>{highlightMatch(p.name)}</h3>
-            <p style={{ margin: 0, color: "#555" }}>{p.description || "No description provided."}</p>
-            <span style={{ fontSize: "0.85rem", color: "#999" }}>Created at: {new Date(p.created_at).toLocaleString()}</span>
-            <span style={{ fontSize: "0.85rem", color: "#999" }}>Start Date: {p.start_date ? new Date(p.start_date).toLocaleDateString() : "N/A"}</span>
-            <span style={{ fontSize: "0.85rem", color: "#999" }}>Finish Date: {p.finish_date ? new Date(p.finish_date).toLocaleDateString() : "N/A"}</span>
-          </div>
-        ))}
-      </div>
+<h2 style={{ marginTop: "2.5rem", fontSize: "2rem", color: "#333" }}>My Projects</h2>
+{error && <p style={{ color: "red", marginTop: "0.5rem" }}>{error}</p>}
+<div
+  style={{
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
+    gap: "1rem",
+    marginTop: "1rem",
+  }}
+>
+  {displayedProjects.map((p) => {
+  console.log("Rendering project:", p); // <-- safe log here
+  return (
+    <div
+      key={p.id}
+      style={{
+        backgroundColor: "#fff",
+        padding: "1rem",
+        borderRadius: "8px",
+        boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+        display: "flex",
+        flexDirection: "column",
+        gap: "0.5rem",
+      }}
+    >
+      <h3 style={{ margin: 0, color: "#222" }}>{highlightMatch(p.name)}</h3>
+      <p style={{ margin: 0, color: "#555" }}>{p.description || "No description provided."}</p>
+      <span style={{ fontSize: "0.85rem", color: "#999" }}>
+        Created at: {new Date(p.created_at).toLocaleString()}
+      </span>
+      <span style={{ fontSize: "0.85rem", color: "#999" }}>
+        Start Date: {p.start_date ? new Date(p.start_date).toLocaleDateString() : "N/A"}
+      </span>
+      <span style={{ fontSize: "0.85rem", color: "#999" }}>
+        Finish Date: {p.finish_date ? new Date(p.finish_date).toLocaleDateString() : "N/A"}
+      </span>
+
+      {/* NEW: Project Status */}
+      <span
+        style={{
+          fontSize: "0.9rem",
+          fontWeight: "bold",
+          color:
+            p.status === "COMPLETED"
+              ? "green"
+              : p.status === "IN_PROGRESS"
+              ? "orange"
+              : "gray",
+        }}
+      >
+        Status: {p.status}
+      </span>
+
+      {/* Button to change status */}
+      {(p.status === "IN_PROGRESS" || p.status === "PENDING") && (
+        <button
+          onClick={() => {
+            console.log(`Updating project ${p.id} status to COMPLETED`);
+            dispatch(updateProjectStatus({ id: p.id, status: "COMPLETED" }));
+          }}
+          style={{
+            marginTop: "0.5rem",
+            padding: "0.5rem 0.75rem",
+            border: "none",
+            borderRadius: "4px",
+            backgroundColor: "#4CAF50",
+            color: "#fff",
+            cursor: "pointer",
+            fontWeight: "bold",
+          }}
+        >
+          Mark Completed
+        </button>
+      )}
+    </div>
+  );
+})}
+
+  </div>
+
     </div>
   );
 };

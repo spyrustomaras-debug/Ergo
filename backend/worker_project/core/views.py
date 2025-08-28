@@ -139,7 +139,6 @@ class ProjectViewSet(viewsets.ModelViewSet):
             )
             
         if project.worker != request.user:
-            print("edi")
             return Response(
                 {"detail": f"You cannot update project '{project.name}' because it does not belong to you."},
                 status=status.HTTP_403_FORBIDDEN

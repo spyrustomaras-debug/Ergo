@@ -1,16 +1,10 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 import { RootState } from "../auth";
+import {Project} from "./projectSlice";
 
-interface Project {
-  id: number;
-  worker: number;
-  name: string;
-  description: string;
-  created_at: string;
-  start_date?: string | null;
-  finish_date?: string | null;
-}
+
+
 
 interface ProjectSearchState {
   results: Project[];
