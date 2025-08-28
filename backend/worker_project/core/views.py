@@ -115,7 +115,36 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['patch'], permission_classes=[IsWorker])
     def update_status(self, request, pk=None):
-        project = self.get_object()
+        try:
+            project = self.get_queryset().get(pk=pk)
+        except Project.DoesNotExist:
+            # Check if project exists at all
+            if Project.objects.filter(pk=pk).exists():
+                return Response(
+                    {"detail": "You are not authorized to update this project"},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            else:
+                return Response(
+                    {"detail": "Project not found"},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+        
+         # Prevent Admin from updating status
+        if request.user.role == "ADMIN":
+            return Response(
+                {"detail": "Admins are not allowed to update project status"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+            
+        if project.worker != request.user:
+            print("edi")
+            return Response(
+                {"detail": f"You cannot update project '{project.name}' because it does not belong to you."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
         if project.worker != request.user:
             return Response({"detail": "Not authorized"}, status=403)
 
