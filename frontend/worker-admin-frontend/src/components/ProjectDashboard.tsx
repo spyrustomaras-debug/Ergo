@@ -87,6 +87,9 @@ const ProjectDashboard: React.FC = () => {
     },
   ]
 
+  const isFormValid = name.trim() && description.trim() && startDate && finishDate && new Date(finishDate) > new Date(startDate);
+
+
   return (
     <div style={{ padding: "2rem", backgroundColor: "#f4f6f8", minHeight: "100vh" }}>
       {/* Create Project Form */}
@@ -108,7 +111,12 @@ const ProjectDashboard: React.FC = () => {
         <textarea placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} style={{ ...inputStyle, minHeight: "80px" }} />
         <input type="date" placeholder="Start Date" value={startDate} onChange={(e) => setStartDate(e.target.value)} style={inputStyle} />
         <input type="date" placeholder="Finish Date" value={finishDate} onChange={(e) => setFinishDate(e.target.value)} style={inputStyle} />
-        <button type="submit" disabled={loading} style={{ padding: "0.75rem", borderRadius: "6px", border: "none", backgroundColor: "#4CAF50", color: "#fff", fontWeight: "bold", cursor: loading ? "not-allowed" : "pointer", transition: "background 0.3s" }}>
+        {startDate && finishDate && new Date(finishDate) <= new Date(startDate) && (
+          <span style={{ color: "red", fontSize: "0.85rem" }}>
+            Finish date must be after start date
+          </span>
+        )}
+        <button type="submit" disabled={loading || !isFormValid} style={{ padding: "0.75rem", borderRadius: "6px", border: "none", backgroundColor: "#4CAF50", color: "#fff", fontWeight: "bold", cursor: loading ? "not-allowed" : "pointer", transition: "background 0.3s" }}>
           {loading ? "Creating..." : "Create Project"}
         </button>
       </form>
