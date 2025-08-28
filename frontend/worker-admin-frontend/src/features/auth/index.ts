@@ -2,6 +2,8 @@ import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "./authSlice";
 import projectReducer from "../projects/projectSlice";
 import adminReducer from "../projects/adminProjectsSlice";
+import projectSearchReducer from "../projects/projectSearchSlice";
+
 import { combineReducers } from "redux";
 
 import {
@@ -26,6 +28,7 @@ const rootReducer = combineReducers({
   auth: authReducer,
   projects: projectReducer,
   adminProject: adminReducer,
+  projectSearch: projectSearchReducer, // ✅ add here
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
