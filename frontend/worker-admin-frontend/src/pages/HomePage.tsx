@@ -23,6 +23,9 @@ const HomePage: React.FC = () => {
       {/* Top bar */}
       <header
         style={{
+          position: "sticky",     // or "fixed" if you want it always visible
+          top: 0,                 // stick to the top
+          zIndex: 1000,           // make sure it’s above other content
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
@@ -68,7 +71,7 @@ const HomePage: React.FC = () => {
             {typeof error === "string" ? error : JSON.stringify(error)}
           </p>
         )}
-        
+
         {/* Render dashboard based on role */}
         {role === "ADMIN" ? <AdminDashboard /> : <ProjectDashboard />}
       </main>
