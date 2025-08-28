@@ -59,10 +59,12 @@ const ProjectDashboard: React.FC = () => {
     setFinishDate("");
   };
 
-  const displayedProjects = searchResults.length > 0 ? searchResults : projects;
+  const displayedProjects = React.useMemo(() => {
+    return searchResults.length > 0 ? searchResults : projects;
+  }, [searchResults, projects]);
 
   // Helper to highlight matching search term
-  const highlightMatch = (text: string) => {
+  const highlightMatch = React.useCallback((text: string) => {
     if (!searchTerm.trim()) return text;
     const regex = new RegExp(`(${searchTerm})`, "gi");
     return text.split(regex).map((part, i) =>
@@ -74,10 +76,10 @@ const ProjectDashboard: React.FC = () => {
         part
       )
     );
-  };
+  }, [searchTerm]);
 
-  const statusData = [
-     {
+  const statusData = React.useMemo(() => [
+    {
       status: "COMPLETED",
       count: displayedProjects.filter(p => p.status === "COMPLETED").length,
     },
@@ -85,10 +87,12 @@ const ProjectDashboard: React.FC = () => {
       status: "IN_PROGRESS",
       count: displayedProjects.filter(p => p.status === "IN_PROGRESS").length,
     },
-  ]
+  ], [displayedProjects]);
 
-  const isFormValid = name.trim() && description.trim() && startDate && finishDate && new Date(finishDate) > new Date(startDate);
 
+  const isFormValid = React.useMemo(() => {
+    return name.trim() && description.trim() && startDate && finishDate && new Date(finishDate) > new Date(startDate);
+  }, [name, description, startDate, finishDate]);
 
   return (
     <div style={{ padding: "2rem", backgroundColor: "#f4f6f8", minHeight: "100vh" }}>

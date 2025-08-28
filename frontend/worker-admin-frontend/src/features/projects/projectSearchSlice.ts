@@ -3,9 +3,6 @@ import axios from "axios";
 import { RootState } from "../auth";
 import {Project} from "./projectSlice";
 
-
-
-
 interface ProjectSearchState {
   results: Project[];
   loading: boolean;

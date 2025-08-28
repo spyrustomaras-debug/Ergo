@@ -74,18 +74,19 @@ const LoginPage: React.FC = () => {
           />
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !form.username.trim() || !form.password.trim()} // Disable if empty
             style={{
               padding: "0.6rem",
               borderRadius: "4px",
               border: "none",
-              backgroundColor: "#4CAF50",
+              backgroundColor: loading || !form.username.trim() || !form.password.trim() ? "#ccc" : "#4CAF50",
               color: "#fff",
-              cursor: loading ? "not-allowed" : "pointer",
+              cursor: loading || !form.username.trim() || !form.password.trim() ? "not-allowed" : "pointer",
             }}
           >
             {loading ? "Loading..." : "Login"}
           </button>
+
         </form>
 
         {!loading && !loggedIn && error && (
