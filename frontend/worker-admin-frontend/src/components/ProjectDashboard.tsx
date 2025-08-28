@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "../features/auth/hooks";
 import { fetchProjects, createProject, updateProjectStatus } from "../features/projects/projectSlice";
 import { searchProjects, clearSearch } from "../features/projects/projectSearchSlice";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+
 
 const ProjectDashboard: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -74,6 +76,17 @@ const ProjectDashboard: React.FC = () => {
     );
   };
 
+  const statusData = [
+     {
+      status: "COMPLETED",
+      count: displayedProjects.filter(p => p.status === "COMPLETED").length,
+    },
+    {
+      status: "IN_PROGRESS",
+      count: displayedProjects.filter(p => p.status === "IN_PROGRESS").length,
+    },
+  ]
+
   return (
     <div style={{ padding: "2rem", backgroundColor: "#f4f6f8", minHeight: "100vh" }}>
       {/* Create Project Form */}
@@ -123,8 +136,8 @@ const ProjectDashboard: React.FC = () => {
     marginTop: "1rem",
   }}
 >
-  {displayedProjects.map((p) => {
-  console.log("Rendering project:", p); // <-- safe log here
+{displayedProjects.map((p) => {
+  console.log("Rendering project:", p);
   return (
     <div
       key={p.id}
@@ -150,7 +163,7 @@ const ProjectDashboard: React.FC = () => {
         Finish Date: {p.finish_date ? new Date(p.finish_date).toLocaleDateString() : "N/A"}
       </span>
 
-      {/* NEW: Project Status */}
+      {/* Project Status */}
       <span
         style={{
           fontSize: "0.9rem",
@@ -166,34 +179,49 @@ const ProjectDashboard: React.FC = () => {
         Status: {p.status}
       </span>
 
-      {/* Button to change status */}
-      {(p.status === "IN_PROGRESS" || p.status === "PENDING") && (
+      {/* Toggle Status Button */}
+      {(p.status === "IN_PROGRESS" || p.status === "PENDING" || p.status === "COMPLETED") && (
         <button
           onClick={() => {
-            console.log(`Updating project ${p.id} status to COMPLETED`);
-            dispatch(updateProjectStatus({ id: p.id, status: "COMPLETED" }));
+            const newStatus = p.status === "COMPLETED" ? "IN_PROGRESS" : "COMPLETED";
+            console.log(`Updating project ${p.id} status to ${newStatus}`);
+            dispatch(updateProjectStatus({ id: p.id, status: newStatus }));
           }}
           style={{
             marginTop: "0.5rem",
             padding: "0.5rem 0.75rem",
             border: "none",
             borderRadius: "4px",
-            backgroundColor: "#4CAF50",
+            backgroundColor: p.status === "COMPLETED" ? "#FFA500" : "#4CAF50",
             color: "#fff",
             cursor: "pointer",
             fontWeight: "bold",
           }}
         >
-          Mark Completed
+          {p.status === "COMPLETED" ? "Mark In Progress" : "Mark Completed"}
         </button>
       )}
     </div>
   );
 })}
 
-  </div>
 
-    </div>
+</div>
+{/* Add the chart AFTER the projects list */}
+<h2 style={{ marginTop: "2.5rem", fontSize: "2rem", color: "#333" }}>Project Status Overview</h2>
+<div style={{ width: "100%", height: 300 }}>
+  <ResponsiveContainer>
+    <BarChart data={statusData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
+      <CartesianGrid strokeDasharray="3 3" />
+      <XAxis dataKey="status" />
+      <YAxis allowDecimals={false} />
+      <Tooltip />
+      <Legend />
+      <Bar dataKey="count" fill="#8884d8" />
+    </BarChart>
+  </ResponsiveContainer>
+</div>
+</div>
   );
 };
 
