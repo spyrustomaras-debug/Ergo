@@ -6,25 +6,92 @@ import ProjectDashboard from "../components/ProjectDashboard";
 import AdminDashboard from "../components/AdminDashboard";
 import { useIdleTimer } from "../hooks/useIdleTimer";
 
+
+// ✅ Step 1: Add translations
+const translations = {
+  en: {
+    appName: "Ergo",
+    logout: "Logout",
+    welcome: "Welcome",
+    defaultUser: "Worker",
+    warningTitle: "Warning!",
+    warningMessage: "You will be logged out in 5 seconds due to inactivity.",
+    continue: "Continue Session",
+    createProject: "Create New Project",
+    projectName: "Project Name",
+    description: "Description",
+    startDate: "Start Date",
+    finishDate: "Finish Date",
+    finishDateError: "Finish date must be after start date",
+    creating: "Creating...",
+    createButton: "Create Project",
+    searchProjects: "Search My Projects",
+    searchPlaceholder: "Search by exact name",
+    searching: "Searching...",
+    noProjectsExport: "No projects to export.",
+    exportButton: "Export Projects",
+    noDescription: "No description provided.",
+    status: "Status",
+    markInProgress: "Mark In Progress",
+    markCompleted: "Mark Completed",
+    projectStatusOverview: "Project Status Overview",
+    prev: "Prev",
+    next: "Next",
+  },
+  gr: {
+    appName: "Έργο",
+    logout: "Αποσύνδεση",
+    welcome: "Καλώς ήρθες",
+    defaultUser: "Εργαζόμενος",
+    warningTitle: "Προειδοποίηση!",
+    warningMessage: "Θα αποσυνδεθείτε σε 5 δευτερόλεπτα λόγω αδράνειας.",
+    continue: "Συνέχεια συνεδρίας",
+    createProject: "Δημιουργία Νέου Έργου",
+    projectName: "Όνομα Έργου",
+    description: "Περιγραφή",
+    startDate: "Ημερομηνία Έναρξης",
+    finishDate: "Ημερομηνία Λήξης",
+    finishDateError: "Η ημερομηνία λήξης πρέπει να είναι μετά την ημερομηνία έναρξης",
+    creating: "Δημιουργία...",
+    createButton: "Δημιουργία Έργου",
+    searchProjects: "Αναζήτηση Έργων Μου",
+    searchPlaceholder: "Αναζήτηση με ακριβές όνομα",
+    searching: "Αναζήτηση...",
+    noProjectsExport: "Δεν υπάρχουν έργα για εξαγωγή.",
+    exportButton: "Εξαγωγή Έργων",
+    noDescription: "Δεν παρέχεται περιγραφή.",
+    status: "Κατάσταση",
+    markInProgress: "Ορισμός σε Εν Εξέλιξη",
+    markCompleted: "Ορισμός Ολοκληρωμένο",
+    projectStatusOverview: "Σύνοψη Κατάστασης Έργων",
+    prev: "Προηγούμενο",
+    next: "Επόμενο",
+  },
+};
+
+
 const HomePage: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { user, role, error } = useAppSelector(state => state.auth);
+  const { user, role, error } = useAppSelector((state) => state.auth);
   const [showWarning, setShowWarning] = useState(false);
+
+  // ✅ Step 2: Add language state
+  const [language, setLanguage] = useState<"en" | "gr">("en");
+  const t = translations[language];
 
   const handleLogout = () => {
     dispatch(logout());
-    navigate("/"); // Redirect to login/register
+    navigate("/"); 
   };
 
   const handleWarning = () => {
     setShowWarning(true);
   };
 
-  // Auto-logout after 1 minute inactivity, show warning 5 seconds before
   useIdleTimer({
-    timeout: 60000,        // 1 minute
-    warningTime: 5000,      // show warning 5 seconds before logout
+    timeout: 60000,        
+    warningTime: 5000,     
     onIdle: handleLogout,
     onWarning: handleWarning,
   });
@@ -55,8 +122,22 @@ const HomePage: React.FC = () => {
             textShadow: "1px 1px 2px rgba(0,0,0,0.2)",
           }}
         >
-          Ergo
+          {t.appName}
         </h1>
+
+        {/* ✅ Step 3: Language Switcher */}
+        <div>
+          <button onClick={() => setLanguage("en")} disabled={language === "en"}>
+            EN
+          </button>
+          <button
+            onClick={() => setLanguage("gr")}
+            disabled={language === "gr"}
+            style={{ marginLeft: "0.5rem" }}
+          >
+            GR
+          </button>
+        </div>
 
         <button
           onClick={handleLogout}
@@ -67,19 +148,30 @@ const HomePage: React.FC = () => {
             backgroundColor: "#f44336",
             color: "#fff",
             cursor: "pointer",
+            marginLeft: "1rem",
           }}
         >
-          Logout
+          {t.logout}
         </button>
       </header>
 
-      <main style={{ padding: "2rem" }}>
-        <h2>Welcome, {user?.username || "Worker"}!</h2>
+    <main style={{ padding: "2rem" }}>
+      <h2>
+        {t.welcome}, {user?.username || t.defaultUser}!
+      </h2>
 
-        {error && <p style={{ color: "red" }}>{typeof error === "string" ? error : JSON.stringify(error)}</p>}
+      {error && (
+        <p style={{ color: "red" }}>
+          {typeof error === "string" ? error : JSON.stringify(error)}
+        </p>
+      )}
 
-        {role === "ADMIN" ? <AdminDashboard /> : <ProjectDashboard />}
-      </main>
+      {role === "ADMIN" ? (
+        <AdminDashboard />
+      ) : (
+        <ProjectDashboard language={language} translations={translations} />
+      )}
+    </main>
 
       {/* Warning Modal */}
       {showWarning && (
@@ -106,8 +198,8 @@ const HomePage: React.FC = () => {
               width: "300px",
             }}
           >
-            <h2>Warning!</h2>
-            <p>You will be logged out in 5 seconds due to inactivity.</p>
+            <h2>{t.warningTitle}</h2>
+            <p>{t.warningMessage}</p>
             <button
               onClick={() => setShowWarning(false)}
               style={{
@@ -119,7 +211,7 @@ const HomePage: React.FC = () => {
                 cursor: "pointer",
               }}
             >
-              Continue Session
+              {t.continue}
             </button>
           </div>
         </div>
