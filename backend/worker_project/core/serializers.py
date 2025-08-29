@@ -7,8 +7,26 @@ from .models import Project
 class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
-        fields = ['id', 'worker', 'name', 'description', 'created_at', 'start_date', 'finish_date', 'status']
+        fields = [
+            'id',
+            'worker',
+            'name',
+            'description',
+            'created_at',
+            'start_date',
+            'finish_date',
+            'status',
+            'latitude',    # ✅ new
+            'longitude',   # ✅ new
+        ]
         read_only_fields = ['worker', 'created_at']  # worker cannot be changed
+        
+    def create(self, validated_data):
+        # Assign the current user as the worker
+        user = self.context['request'].user
+        return Project.objects.create(worker=user, **validated_data)
+        
+
 
 
 # Worker registration

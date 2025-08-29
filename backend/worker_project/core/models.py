@@ -32,6 +32,11 @@ class Project(models.Model):
     finish_date = models.DateField(null=True, blank=True)  # Optional finish date
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="PENDING")  # Project status
 
+
+    # Location fields
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+
     def __str__(self):
         return f"{self.name} ({self.worker.username})"
 

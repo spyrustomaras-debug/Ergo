@@ -69,6 +69,7 @@ class CustomLoginView(TokenObtainPairView):
 class ProjectViewSet(viewsets.ModelViewSet):
     serializer_class = ProjectSerializer
     permission_classes = [permissions.IsAuthenticated]  # Default permission
+    
 
     def get_permissions(self):
         if self.action == "create":
@@ -81,8 +82,6 @@ class ProjectViewSet(viewsets.ModelViewSet):
             return Project.objects.all()
         return Project.objects.filter(worker=user)
 
-    def perform_create(self, serializer):
-        serializer.save(worker=self.request.user)
 
     @action(detail=False, methods=["GET"], permission_classes=[permissions.IsAuthenticated])
     def grouped_projects(self, request):
