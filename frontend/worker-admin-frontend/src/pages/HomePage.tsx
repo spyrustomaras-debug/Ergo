@@ -169,7 +169,7 @@ const HomePage: React.FC = () => {
       {role === "ADMIN" ? (
         <AdminDashboard />
       ) : (
-        <ProjectDashboard language={language} translations={translations} />
+        <ProjectDashboard/>
       )}
     </main>
 
