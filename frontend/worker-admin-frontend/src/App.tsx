@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from './api/ProtectedRoute';
 import { Suspense, lazy } from 'react';
 import { Loader } from './utils/Loader';
+import NotFoundPage from './pages/NotFoundPage';
 
 // lazy load LoginPage
 const LoginPage = lazy(() => import("../src/pages/LoginPage"));
@@ -23,6 +24,8 @@ const App = () => {
           } />
         {/* Redirect unknown routes */}
         <Route path="*" element={<Navigate to="/" replace />} />
+        {/* 404 Page */}
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </Suspense>
   );

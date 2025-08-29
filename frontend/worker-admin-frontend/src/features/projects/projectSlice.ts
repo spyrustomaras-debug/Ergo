@@ -11,7 +11,9 @@ export interface Project {
   created_at: string;
   start_date?: string;
   finish_date?: string;
-  status: ProjectStatus; // <-- add status
+  status: ProjectStatus;
+  latitude?: number | null;   // ✅ new
+  longitude?: number | null;  // ✅ new
 }
 
 interface ProjectState {
@@ -42,21 +44,48 @@ export const fetchProjects = createAsyncThunk<
   }
 });
 
-// Create a project
 export const createProject = createAsyncThunk<
   Project,
-  { name: string; description: string; start_date?: string; finish_date?: string },
+  { 
+    name: string; 
+    description: string; 
+    start_date?: string; 
+    finish_date?: string;
+    latitude?: number | null;
+    longitude?: number | null;
+  },
   { state: RootState; rejectValue: any }
->("projects/createProject", async (data, { getState, rejectWithValue }) => {
-  try {
-    const token = getState().auth.accessToken;
-    setAuthToken(token || null);
-    const response = await axiosInstance.post("/projects/", data);
-    return response.data;
-  } catch (err: any) {
-    return rejectWithValue(err.response?.data || "Failed to create project");
+>(
+  "projects/createProject",
+  async (data, { getState, rejectWithValue }) => {
+    try {
+      const token = getState().auth.accessToken;
+      if (!token) throw new Error("No access token available");
+
+      // Set token in axios instance
+      setAuthToken(token);
+
+      // Only include latitude/longitude if valid numbers
+      const payload: any = {
+        name: data.name,
+        description: data.description,
+        start_date: data.start_date,
+        finish_date: data.finish_date,
+      };
+      console.log(payload)
+      if (typeof data.latitude === "number") payload.latitude = data.latitude;
+      if (typeof data.longitude === "number") payload.longitude = data.longitude;
+      console.log(payload)
+      const response = await axiosInstance.post("/projects/", payload);
+      return response.data;
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data || "Failed to create project");
+    }
   }
-});
+);
+
+
+
 
 // Update project status
 // projectSlice.ts
