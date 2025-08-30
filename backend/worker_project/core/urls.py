@@ -4,6 +4,7 @@ from rest_framework_simplejwt.views import TokenRefreshView
 from rest_framework.routers import DefaultRouter
 from .views import ProjectViewSet
 from django.contrib import admin
+from .views import WorkerPasswordResetRequestView, WorkerPasswordResetConfirmView
 
 router = DefaultRouter()
 router.register("projects", ProjectViewSet, basename="projects")
@@ -14,6 +15,8 @@ urlpatterns = [
     path("register/admin/", AdminRegisterView.as_view(), name="register_admin"),
     path("login/", CustomLoginView.as_view(), name="login"),
     path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+    path("password-reset/", WorkerPasswordResetRequestView.as_view(), name="worker-password-reset"),
+    path("password-reset-confirm/", WorkerPasswordResetConfirmView.as_view(), name="worker-password-reset-confirm"),
     path("", include(router.urls)),  # for /api/projects/
 
 ]

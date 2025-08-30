@@ -12,9 +12,23 @@ from rest_framework.decorators import api_view, action
 from rest_framework import status
 from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 from rest_framework import serializers
+from .serializers import PasswordResetSerializer, PasswordResetConfirmSerializer
+from rest_framework.views import APIView
 
 
+class WorkerPasswordResetRequestView(APIView):
+    def post(self, request):
+        serializer = PasswordResetSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({"detail": "Password reset email sent."}, status=status.HTTP_200_OK)
 
+class WorkerPasswordResetConfirmView(APIView):
+    def post(self, request):
+        serializer = PasswordResetConfirmSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({"detail": "Password has been reset successfully."}, status=status.HTTP_200_OK)
 
 class IsWorker(permissions.BasePermission):
     """
@@ -82,6 +96,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
             return Project.objects.all()
         return Project.objects.filter(worker=user)
 
+    def perform_create(self, serializer):
+        serializer.save(worker=self.request.user)
 
     @action(detail=False, methods=["GET"], permission_classes=[permissions.IsAuthenticated])
     def grouped_projects(self, request):
