@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useAppDispatch, useAppSelector } from "../features/auth/hooks";
-import { fetchProjects, createProject, updateProjectStatus } from "../features/projects/projectSlice";
+import { fetchProjects, createProject, updateProjectStatus, Project } from "../features/projects/projectSlice";
 import { searchProjects, clearSearch } from "../features/projects/projectSearchSlice";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
@@ -13,6 +13,7 @@ import "leaflet/dist/leaflet.css";
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
+import ProjectCard from "./ProjectCard";
 
 (L.Icon.Default as any).mergeOptions({
   iconRetinaUrl: markerIcon2x,
@@ -35,6 +36,7 @@ const ProjectDashboard: React.FC = () => {
 
 
 
+
   const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null);
 
   // Leaflet map
@@ -48,10 +50,122 @@ const ProjectDashboard: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(4);
 
+const [popupOpen, setPopupOpen] = useState(false);
+const [popupCoordinates, setPopupCoordinates] = useState<{ lat: number; lng: number } | null>(null);
+const [popupProjectName, setPopupProjectName] = useState("");
+const popupMapRef = useRef<HTMLDivElement>(null);
+const popupMapInstanceRef = useRef<L.Map | null>(null);
+const popupMarkerRef = useRef<L.Marker | null>(null);
+
+// Open popup with project coordinates
+const handleShowProjectOnMap = (project: Project) => {
+  if (!project.latitude || !project.longitude) return;
+
+    // If popup was already open, reset marker first
+  if (popupMarkerRef.current) {
+    popupMarkerRef.current.remove();
+    popupMarkerRef.current = null;
+  }
+
+  setPopupCoordinates({ lat: Number(project.latitude), lng: Number(project.longitude) });
+  setPopupProjectName(project.name);
+  setPopupOpen(true);
+};
+
+const handleClosePopup = () => {
+  setPopupOpen(false);
+  // Optional: remove marker
+  if (popupMarkerRef.current) {
+    popupMarkerRef.current.remove();
+    popupMarkerRef.current = null;
+  }
+
+    // Optional: reset coordinates & project name
+  setPopupCoordinates(null);
+  setPopupProjectName("");
+};
+
+
+
+// Render / Update map when popup opens
+useEffect(() => {
+  if (!popupOpen || !popupCoordinates || !popupMapRef.current) return;
+
+  // Initialize map if not yet created
+  if (!popupMapInstanceRef.current) {
+    const mapInstance = L.map(popupMapRef.current).setView([popupCoordinates.lat, popupCoordinates.lng], 12);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(mapInstance);
+
+    const marker = L.marker([popupCoordinates.lat, popupCoordinates.lng])
+      .addTo(mapInstance)
+      .bindPopup(`<b>${popupProjectName}</b><br/>Lat: ${popupCoordinates.lat.toFixed(6)}, Lon: ${popupCoordinates.lng.toFixed(6)}`)
+      .openPopup();
+
+    popupMapInstanceRef.current = mapInstance;
+    popupMarkerRef.current = marker;
+  } else {
+    // Map exists → update marker & center
+    popupMapInstanceRef.current.setView([popupCoordinates.lat, popupCoordinates.lng], 12);
+
+    if (popupMarkerRef.current) {
+      popupMarkerRef.current
+        .setLatLng([popupCoordinates.lat, popupCoordinates.lng])
+        .setPopupContent(`<b>${popupProjectName}</b><br/>Lat: ${popupCoordinates.lat.toFixed(6)}, Lon: ${popupCoordinates.lng.toFixed(6)}`)
+        .openPopup();
+    } else {
+      popupMarkerRef.current = L.marker([popupCoordinates.lat, popupCoordinates.lng])
+        .addTo(popupMapInstanceRef.current)
+        .bindPopup(`<b>${popupProjectName}</b><br/>Lat: ${popupCoordinates.lat.toFixed(6)}, Lon: ${popupCoordinates.lng.toFixed(6)}`)
+        .openPopup();
+    }
+  }
+
+  // Leaflet sometimes needs invalidateSize for hidden divs
+  setTimeout(() => {
+    popupMapInstanceRef.current?.invalidateSize();
+  }, 50);
+}, [popupOpen, popupCoordinates, popupProjectName]);
+
+
+
+
+
+
+
   // Fetch projects
   useEffect(() => {
     dispatch(fetchProjects());
   }, [dispatch]);
+
+const showProjectOnMap = (lat: number, lng: number, name: string) => {
+  if (!mapInstanceRef.current) return;
+
+  const mapInstance = mapInstanceRef.current;
+
+  // Make sure the map container is visible (in case of hidden tab/panel)
+  setTimeout(() => mapInstance.invalidateSize(), 100);
+
+  // Remove previous marker if exists
+  if (marker) {
+    marker.remove();
+    setMarker(null);
+  }
+
+  // Add new marker
+  const newMarker = L.marker([lat, lng]).addTo(mapInstance);
+  newMarker.bindPopup(`<b>${name}</b><br/>Lat: ${lat.toFixed(6)}, Lon: ${lng.toFixed(6)}`).openPopup();
+  setMarker(newMarker);
+
+  // Pan & zoom the map to the marker
+  mapInstance.setView([lat, lng], 12); // zoom level can be adjusted
+};
+
+
+
+
+
 
   // Debounced search
   useEffect(() => {
@@ -191,21 +305,11 @@ useEffect(() => {
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))", gap: "1rem", marginTop: "1rem" }}>
         {paginatedProjects.map((p) => (
-          <div key={p.id} style={{ backgroundColor: "#fff", padding: "1rem", borderRadius: "8px", boxShadow: "0 2px 8px rgba(0,0,0,0.1)", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-            <h3 style={{ margin: 0, color: "#222" }}>{highlightMatch(p.name)}</h3>
-            <p style={{ margin: 0, color: "#555" }}>{p.description || "No description provided."}</p>
-            <span style={{ fontSize: "0.85rem", color: "#999" }}>Created at: {new Date(p.created_at).toLocaleString()}</span>
-            <span style={{ fontSize: "0.85rem", color: "#999" }}>Start Date: {p.start_date ? new Date(p.start_date).toLocaleDateString() : "N/A"}</span>
-            <span style={{ fontSize: "0.85rem", color: "#999" }}>Finish Date: {p.finish_date ? new Date(p.finish_date).toLocaleDateString() : "N/A"}</span>
-            <span style={{ fontSize: "0.9rem", fontWeight: "bold", color: p.status === "COMPLETED" ? "green" : p.status === "IN_PROGRESS" ? "orange" : "gray" }}>Status: {p.status}</span>
-            <span style={{fontSize:"0.9rem", fontWeight:"bold"}}>Lat: {p.latitude ? p.latitude : "N/A"}</span>
-            <span style={{fontSize:"0.9rem", fontWeight:"bold"}}>Lon: {p.longitude ? p.longitude : "N/A"}</span>
-            {(p.status === "IN_PROGRESS" || p.status === "PENDING" || p.status === "COMPLETED") && (
-              <button onClick={() => dispatch(updateProjectStatus({ id: p.id, status: p.status === "COMPLETED" ? "IN_PROGRESS" : "COMPLETED" }))} style={{ marginTop: "0.5rem", padding: "0.5rem 0.75rem", border: "none", borderRadius: "4px", backgroundColor: p.status === "COMPLETED" ? "#FFA500" : "#4CAF50", color: "#fff", cursor: "pointer", fontWeight: "bold" }}>
-                {p.status === "COMPLETED" ? "Mark In Progress" : "Mark Completed"}
-              </button>
-            )}
-          </div>
+          <ProjectCard 
+            key={p.id}
+            project={p} 
+            highlightMatch={highlightMatch} 
+            onUpdateStatus={(id, status) => dispatch(updateProjectStatus({ id, status }))}/>
         ))}
       </div>
 
@@ -232,6 +336,27 @@ useEffect(() => {
           </BarChart>
         </ResponsiveContainer>
       </div>
+
+{popupOpen && (
+  <div className="popup-overlay" style={{
+    position: "fixed", top:0, left:0, width:"100%", height:"100%",
+    backgroundColor:"rgba(0,0,0,0.5)", display:"flex", justifyContent:"center",
+    alignItems:"center", zIndex:1000
+  }}>
+    <div className="popup-content" style={{
+      backgroundColor:"#fff", padding:"1rem", borderRadius:"8px",
+      width:"80%", maxWidth:"600px", position:"relative"
+    }}>
+      <button
+        onClick={handleClosePopup}
+        style={{ position:"absolute", top:"10px", right:"10px", padding:"0.5rem", cursor:"pointer" }}
+      >
+        Close
+      </button>
+      <div ref={popupMapRef} style={{ height: "400px", width: "100%" }} />
+    </div>
+  </div>
+)}
     </div>
   );
 };

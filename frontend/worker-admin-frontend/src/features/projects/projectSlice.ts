@@ -92,7 +92,7 @@ export const createProject = createAsyncThunk<
 
 export const updateProjectStatus = createAsyncThunk<
   Project,
-  { id: number; status: "IN_PROGRESS" | "COMPLETED" },
+  { id: number; status: "IN_PROGRESS" | "COMPLETED" | "PENDING" },
   { state: RootState; rejectValue: any }
 >(
   "projects/updateStatus",
