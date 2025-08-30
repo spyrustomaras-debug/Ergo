@@ -1,30 +1,36 @@
-import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
-import ProtectedRoute from './api/ProtectedRoute';
-import { Suspense, lazy } from 'react';
-import { Loader } from './utils/Loader';
-import NotFoundPage from './pages/NotFoundPage';
+import React, { Suspense, lazy } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
+import ProtectedRoute from "./api/ProtectedRoute";
+import { Loader } from "./utils/Loader";
+import NotFoundPage from "./pages/NotFoundPage";
 
-// lazy load LoginPage
+// Lazy load pages
 const LoginPage = lazy(() => import("../src/pages/LoginPage"));
-const HomePage = lazy(() => import("../src/pages/HomePage"));
 const RegisterPage = lazy(() => import("../src/pages/Register"));
+const HomePage = lazy(() => import("../src/pages/HomePage"));
 
-const App = () => {
+const App: React.FC = () => {
   return (
-    <Suspense fallback={<Loader/>}>
+    <Suspense fallback={<Loader />}>
       <Routes>
-        <Route path="/" element={<RegisterPage />} />
+        {/* Redirect root "/" to login */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
+
+        {/* Auth routes */}
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/home" element=
-          {
-          <ProtectedRoute>
-            <HomePage />
-          </ProtectedRoute>
-          } />
-        {/* Redirect unknown routes */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-        {/* 404 Page */}
+        <Route path="/register" element={<RegisterPage />} />
+
+        {/* Protected route */}
+        <Route
+          path="/home"
+          element={
+            <ProtectedRoute>
+              <HomePage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* 404 */}
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </Suspense>
