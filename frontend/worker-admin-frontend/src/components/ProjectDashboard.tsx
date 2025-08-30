@@ -288,18 +288,15 @@ useEffect(() => {
             {loading ? "Creating..." : "Create Project"}
           </button>
         </form>
-
-        {/* Search */}
-        <div style={{ flex: 1, maxWidth: "400px" }}>
+      </div>
+      {/* Search */}
+      <div style={{ flex: 1, maxWidth: "400px" }}>
           <h2 style={{ fontSize: "1.5rem", color: "#333" }}>Search My Projects</h2>
           <input type="text" placeholder="Search by exact name" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ ...inputStyle, width: "100%", marginBottom: "1rem" }} />
           {searchLoading && <p>Searching...</p>}
           {searchError && <p style={{ color: "red" }}>{searchError}</p>}
-        </div>
       </div>
-
       {/* Projects List */}
-      <h2 style={{ marginTop: "2.5rem", fontSize: "2rem", color: "#333" }}>My Projects</h2>
       {error && <p style={{ color: "red", marginTop: "0.5rem" }}>{error}</p>}
       <button onClick={handleExport} style={{ padding: "0.5rem 1rem", borderRadius: "6px", border: "none", backgroundColor: "#1976d2", color: "#fff", fontWeight: "bold", cursor: "pointer", marginBottom: "1rem" }}>Export Projects</button>
 
