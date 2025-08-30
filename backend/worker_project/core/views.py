@@ -14,7 +14,18 @@ from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 from rest_framework import serializers
 from .serializers import PasswordResetSerializer, PasswordResetConfirmSerializer
 from rest_framework.views import APIView
+from .serializers import PasswordResetConfirmSerializer
 
+class WorkerPasswordResetConfirmView(APIView):
+    def post(self, request, uidb64, token):
+        serializer = PasswordResetConfirmSerializer(data={
+            "uidb64": uidb64,
+            "token": token,
+            "new_password": request.data.get("new_password")
+        })
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({"detail": "Password has been reset successfully."}, status=status.HTTP_200_OK)
 
 class WorkerPasswordResetRequestView(APIView):
     def post(self, request):
@@ -23,12 +34,6 @@ class WorkerPasswordResetRequestView(APIView):
         serializer.save()
         return Response({"detail": "Password reset email sent."}, status=status.HTTP_200_OK)
 
-class WorkerPasswordResetConfirmView(APIView):
-    def post(self, request):
-        serializer = PasswordResetConfirmSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response({"detail": "Password has been reset successfully."}, status=status.HTTP_200_OK)
 
 class IsWorker(permissions.BasePermission):
     """

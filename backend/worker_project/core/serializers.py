@@ -64,6 +64,9 @@ class PasswordResetSerializer(serializers.Serializer):
             from_email="noreply@example.com",
             recipient_list=[email],
         )
+        
+        return reset_link
+
 
 class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
